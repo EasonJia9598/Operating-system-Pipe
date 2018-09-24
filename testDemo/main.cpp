@@ -56,7 +56,8 @@ int main(){
         read(fds0[0], buf, sizeof(number));
         printf("child reads: %s\n", buf);
         
-        exit(0);
+        //exec (read File)
+        
         
     }
 
@@ -70,10 +71,12 @@ int main(){
             write(fds0[1], str, sizeof(number));
         }
      
+ 
+        
+        
     
+       
         
         
-        
-        exit(0);
     }
 }

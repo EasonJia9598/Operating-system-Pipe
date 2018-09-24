@@ -51,9 +51,7 @@ using namespace std;
 char string0[] = "Hello, this is the parent process";
 char string1[] = "Hi, this is the child 1";
 char string2[] = "Hi, this is the child 2";
-char one[] = "1";
-char two[] = "2";
-char three[] = "3";
+char number[] = "1";
 
 /************************************************************************
  
@@ -156,7 +154,6 @@ int main(int argc, const char * argv[]) {
     
     char buf[1024];
     int fds[10][2];
-    pid_t pid;
     
     // initialize pipe.
     // even number for parent-to-children's write_communication
@@ -165,9 +162,12 @@ int main(int argc, const char * argv[]) {
         pipe(fds[i]);
     }
     
+    pid_t pid;
+    int p[5];
     // fork 5 children processes
     for (int i = 0 ; i < 5; i++) {
         pid = fork();
+        p[i] = pid;
         if(pid == 0 || pid == -1){
             break;
             //https://blog.csdn.net/cupidove/article/details/9297335
@@ -178,17 +178,35 @@ int main(int argc, const char * argv[]) {
         fprintf(stderr, "Fork Failed");
         return 1;
     }else if (pid == 0) { /* child process*/
-        //get ID
+        /* get ID */
         
-        int array[5];
+        //close
+        close(fds[0][WRITE_END]);
+        //read parent message
+        read(fds[0][READ_END], buf, sizeof(number));
+        printf("child reads ID = : %c\n", buf[0]);
+        
+        /* reading array */
+        int array[5]; string s(1, buf[0]);
+        
+        processFile("/Users/WillJia/Desktop/IOS Lecture/Projects/Pipe/median/input_" + s +  ".txt", array);
+        
+        /* array testing
+        for (int n : array) {
+            printf("array number = %d\n" , n);
+        }
+        
+         */
         
         
     }else{ /* parent process*/
         
         // assign ID
-        for (int i = parent_to_child_write_beginning; i < 10; i+=2) {
-            close(fds[i][READ_END]);
-            write(fds[i][WRITE_END], buf, sizeof(to_string(i / 2)));
+        for(int i = 1; i < 6 ; i++){
+            close(fds[0][READ_END]);
+            char str[20] = {0};
+            sprintf(str, "%d" , i);
+            write(fds[0][WRITE_END], str, sizeof(number));
         }
         
         
