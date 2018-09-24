@@ -13,6 +13,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#define READ_END 0
+#define WRITE_END 1
+
 char string1[] = "Hello from parent";
 char string2[] = "Hi from child";
 
@@ -26,7 +29,8 @@ int main()
     if (fork()>0){
         //Parent process starts
         for (i=0; i<3; i++) {
-            //write parent message into fds1 close(fds1[0]);
+            //write parent message into fds1
+            close(fds1[0]);
             write(fds1[1], string1,sizeof(string1));
             //read child message from fds2
             close(fds2[1]);
@@ -38,9 +42,11 @@ int main()
     }
     else {
         for (i=0; i<3; i++) {
-            //write child message into fds2 close(fds2[0]);
+            //write child message into fds2
+            close(fds2[0]);
             write(fds2[1], string2, sizeof(string2));
-            //read parent message from fds1 close(fds1[1]);
+            //read parent message from fds1
+            close(fds1[1]);
             read(fds1[0], buf, sizeof(string1));
             printf("child read %s\n", buf);
         }
