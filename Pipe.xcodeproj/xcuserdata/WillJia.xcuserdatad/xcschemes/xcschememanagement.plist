@@ -14,10 +14,20 @@
 			<key>orderHint</key>
 			<integer>2</integer>
 		</dict>
+		<key>medianDemo.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>4</integer>
+		</dict>
 		<key>pipe2.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>1</integer>
+		</dict>
+		<key>testDemo.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>3</integer>
 		</dict>
 	</dict>
 </dict>
