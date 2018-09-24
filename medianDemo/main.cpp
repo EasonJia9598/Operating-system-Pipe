@@ -51,7 +51,8 @@ using namespace std;
 char string0[] = "Hello, this is the parent process";
 char string1[] = "Hi, this is the child 1";
 char string2[] = "Hi, this is the child 2";
-char number[] = "1";
+int ID ;
+int msgSingal;
 
 /************************************************************************
  
@@ -155,22 +156,26 @@ int main(int argc, const char * argv[]) {
     char buf[1024];
     int fds[10][2];
     
-    // initialize pipe.
-    // even number for parent-to-children's write_communication
-    // odd  number for children-to-parent's write_communication
+    /* initialize pipe. */
+    
+    /** piping index rules :
+     * even number for parent-to-children's write_communication
+     * index = id * 2 - 2
+     * odd  number for children-to-parent's write_communication
+     * index = id * 2 - 1
+     */
     for (int i = 0; i < 10; i++) {
         pipe(fds[i]);
     }
     
     pid_t pid;
-    int p[5];
+    int numb;
     // fork 5 children processes
     for (int i = 0 ; i < 5; i++) {
         pid = fork();
-        p[i] = pid;
         if(pid == 0 || pid == -1){
             break;
-            //https://blog.csdn.net/cupidove/article/details/9297335
+            //Ref : https://blog.csdn.net/cupidove/article/details/9297335
         }
     }
     
@@ -179,37 +184,61 @@ int main(int argc, const char * argv[]) {
         return 1;
     }else if (pid == 0) { /* child process*/
         /* get ID */
-        
         //close
         close(fds[0][WRITE_END]);
         //read parent message
-        read(fds[0][READ_END], buf, sizeof(number));
-        printf("child reads ID = : %c\n", buf[0]);
-        
+        read(fds[0][READ_END], &ID, sizeof(ID));
+        printf("child reads ID = : %d\n", ID);
+
         /* reading array */
-        int array[5]; string s(1, buf[0]);
+        int array[5];
         
-        processFile("/Users/WillJia/Desktop/IOS Lecture/Projects/Pipe/median/input_" + s +  ".txt", array);
+        processFile("/Users/WillJia/Desktop/IOS Lecture/Projects/Pipe/median/input_" + to_string(ID) +  ".txt", array);
         
         /* array testing
         for (int n : array) {
             printf("array number = %d\n" , n);
-        }
+        } */
         
-         */
-        
+        /* sending READY to parent */
+        close(fds[ID * 2 - 1][READ_END]);
+        msgSingal = READY;
+        write(fds[ID * 2 - 1][WRITE_END], &msgSingal, sizeof(msgSingal));
         
     }else{ /* parent process*/
         
         // assign ID
         for(int i = 1; i < 6 ; i++){
             close(fds[0][READ_END]);
-            char str[20] = {0};
-            sprintf(str, "%d" , i);
-            write(fds[0][WRITE_END], str, sizeof(number));
+            ID = i;
+            write(fds[0][WRITE_END], &ID, sizeof(ID));
         }
         
-        
+        int singal;
+        int index[5] = {0};
+        int flag = 0;
+        while (true) {
+            for (int i = child_to_parent_write_beginning ; i < 10; i+=2) {
+                close(fds[i][WRITE_END]);
+                read(fds[i][READ_END] , &singal , sizeof(singal));
+                printf("singal = %d\n" , singal);
+                if (singal == 500) {
+                    index[i/2]++;
+                }
+            }
+            
+            for (int i = 0; i < 5 ; i++) {
+                if (index[i] <= 0){
+                    flag++;
+                }
+            }
+            
+            if (flag == 0) {
+                break;
+            }else{
+                flag = 0;
+            }
+        }
     }
     
     /*  array test
