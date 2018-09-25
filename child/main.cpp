@@ -17,6 +17,8 @@
 #include <fstream>
 #include <vector>
 #include <sstream>
+#include <cstdlib>
+#include <array>
 
 using namespace std;
 
@@ -45,11 +47,15 @@ using namespace std;
  */
 
 
-char string0[] = "Hello, this is the parent process";
-char string1[] = "Hi, this is the child 1";
-char string2[] = "Hi, this is the child 2";
-int ID ;
-int msgSingal;
+int ID ; // child ID
+
+/************************************************************************
+ 
+ 
+                        CHILDREN FUNCTIONS
+ 
+ 
+ *************************************************************************/
 
 /************************************************************************
  
@@ -128,23 +134,54 @@ void processFile(string filename, int array[]){
 
 /************************************************************************
  
+ Function:        getID
  
- CHILDREN FUNCTIONS
- 
+ Description:     get ID from **argv
  
  *************************************************************************/
+void getID(const char * argv[]){
+    ID = atoi(argv[0]);
+}
+
+/************************************************************************
+ 
+ Function:        readingArray
+ 
+ Description:     whole procedure of reading array
+ 
+ *************************************************************************/
+void readingArray(int array[]){
+    
+    int n = 0;
+    
+    /* reading array */
+
+    processFile("/Users/WillJia/Desktop/IOS Lecture/Projects/Pipe/median/input_" + to_string(ID) +  ".txt", array);
+    
+    // check capacity of array
+    for (int i = 0; i < 5 ; i++) {
+        if (array[i] != 0) {
+            n++;
+        }
+    }
+    
+    if (n == 5) {
+        cout << READY;
+    }else{
+        cout << 2000;
+    }
+}
+
 
 
 
 int main(int argc, const char * argv[]) {
     
-    /* reading array */
-    //    int array[5];
-    int SIZE = 1024;
-    long n;
-    char buf[SIZE];
-    msgSingal = READY;
-    write(STDOUT_FILENO, &msgSingal, sizeof(msgSingal));
+    //TODO: change array to vector<int>
+    int array[5];
+    getID(argv);
+    readingArray(array);
+   
     exit(0);
 
 }

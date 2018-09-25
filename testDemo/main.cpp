@@ -12,7 +12,7 @@
  
  Description:      Using pipe technique to find median in 5 files by 5 child process.
  
- Author:          Zesheng Jia A00416452
+ Author:           Zesheng Jia A00416452
  
  *************************************************************************************/
 
@@ -36,11 +36,11 @@ using namespace std;
 #define WRITE_END 1
 
 //signal
-#define REQUEST 100 //REQUEST
-#define PIVOT 200   //PIVOT
-#define LARGE 300   //LARGE
-#define SMALL 400   //SMALL
-#define READY 500   //READY
+#define REQUEST 100         //REQUEST
+#define PIVOT 200           //PIVOT
+#define LARGE 300           //LARGE
+#define SMALL 400           //SMALL
+#define READY 500           //READY
 
 //reading start flag
 #define parent_to_child_write_beginning 0
@@ -54,106 +54,167 @@ char string2[] = "Hi, this is the child 2";
 int ID ;
 int msgSingal;
 
+
+
 /************************************************************************
  
- Function:        split
  
- Description:     spilt line into elements
+                        PARENT FUNCTIONS
+ 
  
  *************************************************************************/
 
 
-std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
-    std::stringstream ss(s);
-    std::string item;
-    while(std::getline(ss, item, delim)) {
-        elems.push_back(item);
+
+
+/************************************************************************
+ 
+ Function:        assignID
+ 
+ Description:     assignID to child process
+ 
+ *************************************************************************/
+void assignID(int fds[10][2]){
+    // assign ID
+    for(int i = 1; i < 6 ; i++){
+        close(fds[0][READ_END]);
+        ID = i;
+        write(fds[0][WRITE_END], &ID, sizeof(ID));
     }
-    return elems;
 }
-// https://stackoverflow.com/questions/275404/splitting-strings-in-c
+
+
 
 /************************************************************************
  
- Function:        readContent
+ Function:        waitForReady
  
- Description:     read content from file
+ Description:     parent wait for all child ready signal
  
  *************************************************************************/
-
-string readContent(string filename){
-    string content;
-    string line;
-    ifstream myfile (filename);
-    if (myfile.is_open()) {
-        while (getline(myfile,line)) {
-            content.append(line);
+void waitForReady(int fds[10][2]){
+    
+    int C2P_singal; /* signal container */
+    int index[5] = {0}; /* flag for sinal which has been received */
+    int flag = 0; /* flag for signal which has not been received */
+    char buf[1024];
+    /* keep listening until all child process return message. */
+    while (true) {
+        
+        for (int i = child_to_parent_write_beginning ; i < 10; i+=2) {
+            
+            //                printf("oringal%d = %s\n" ,i ,  buf);
+            memset(buf, 0, sizeof(buf));    // clear buf container
+            
+            close(fds[i][WRITE_END]);       // close C2P write_end
+            read(fds[i][READ_END] , &buf , sizeof(buf)); // start read
+            
+            //                printf("singal%d = %s\n" ,i ,  buf);
+            
+            C2P_singal = atoi(buf);         // change char[] buf to int
+            
+            if (C2P_singal == 500) {        // if singal = READY
+                index[i/2]++;               // specific child's spot ++
+                printf("Child %d sends READY\n" , i/2 + 1);
+            }else if(C2P_singal == 2000){   // input has mistake
+                cout << "******Input file content has mistake*****" << endl;
+                cout << "*************Program failed**************" << endl;
+                exit(0);                    // exit
+            }
+        }
+        
+        for (int i = 0; i < 5 ; i++) {
+            if (index[i] <= 0){
+                flag++;
+            }
+        }
+        
+        if (flag == 0) {
+            printf("Parent READY\n");
+            break;
+        }else{
+            flag = 0;
         }
     }
-    myfile.close();
-    return content;
 }
+
 
 /************************************************************************
  
- Function:        arrayConvert
  
- Description:     convert string to array
+                        CHILDREN FUNCTIONS
+ 
  
  *************************************************************************/
 
-void arrayConvert(string content, int array[]){
+
+/************************************************************************
+ 
+ Function:        childGetID
+ 
+ Description:     child get ID
+ 
+ *************************************************************************/
+
+void childGetID(int fds[10][2]){
     
-    vector<string> numbers ;
-    split(content, ' ', numbers);
-    int i = 0;
-    for(string n : numbers){
-        stringstream geek(n);
-        geek >> array[i];
-        i++;
-    }
+    /* get ID */
+    //close
+    close(fds[0][WRITE_END]);
+    //read parent message
+    read(fds[0][READ_END], &ID, sizeof(ID));
+    //        printf("Child reads ID = : %d\n", ID);
+    
     
 }
-//https://www.geeksforgeeks.org/converting-strings-numbers-cc/
+
+
 
 /************************************************************************
  
- Function:        processFile
+ Function:        pipeToSTD_IN_OUT
  
- Description:     read file and store in array
+ Description:     change pipe to std:in and std:out
  
  *************************************************************************/
-
-void processFile(string filename, int array[]){
-    arrayConvert(readContent(filename), array);
+void pipeToSTD_IN_OUT(int fds[10][2]){
+    
+    /* change pipe into std::in and std::out mode */
+    close(fds[ID * 2 - 2][WRITE_END]); // close P2C write end
+    close(fds[ID * 2 - 1][READ_END]);  // close C2P read end
+    
+    dup2(fds[ID * 2 - 2][READ_END], STDIN_FILENO);    //P2C
+    dup2(fds[ID * 2 - 1][WRITE_END], STDOUT_FILENO);  //C2P
+    // you should be able now to close the two remaining
+    // pipe file desciptors as well as you dup'ed them already
+    // (confirmed that it is working)
+    close(fds[ID * 2 - 2][READ_END]);
+    close(fds[ID * 2 - 1][WRITE_END]);
+    
+    /*https://stackoverflow.com/questions/51996946/c-both-input-and-output-pipe-to-the-external-program*/
 }
 
 
 /************************************************************************
  
+ Function:        childExecProgram
  
- CHILDREN FUNCTIONS
- 
- 
- *************************************************************************/
-
-
-
-
-
-
-/************************************************************************
- 
- 
- PARENT FUNCTIONS
- 
+ Description:     child exec program
  
  *************************************************************************/
+void childExecProgram(const char* filename){
+    /* change ID to char* */
+    std::string s = std::to_string(ID);
+    char const *pchar = s.c_str();
+    
+    /* drop child process, change into a new  running program */
+    execlp(filename, pchar , NULL);
+    
+}
 
 
 int main(int argc, const char * argv[]) {
     
-    char buf[1024];
     int fds[10][2];
     
     /* initialize pipe. */
@@ -183,75 +244,21 @@ int main(int argc, const char * argv[]) {
         return 1;
         
     }else if (pid == 0) { /* child process*/
-        /* get ID */
-        //close
-        close(fds[0][WRITE_END]);
-        //read parent message
-        read(fds[0][READ_END], &ID, sizeof(ID));
-        printf("child reads ID = : %d\n", ID);
         
+        childGetID(fds);
        
-        /* change pipe into std::in and std::out mode */
-        close(fds[ID * 2 - 2][WRITE_END]); // close P2C write end
-        close(fds[ID * 2 - 1][READ_END]);  // close C2P read end
-
-        dup2(fds[ID * 2 - 2][READ_END], STDIN_FILENO);    //P2C
-        dup2(fds[ID * 2 - 1][WRITE_END], STDOUT_FILENO);  //C2P
-        // you should be able now to close the two remaining
-        // pipe file desciptors as well as you dup'ed them already
-        // (confirmed that it is working)
-        close(fds[ID * 2 - 2][READ_END]);
-        close(fds[ID * 2 - 1][WRITE_END]);
-
-        /*https://stackoverflow.com/questions/51996946/c-both-input-and-output-pipe-to-the-external-program*/
+        pipeToSTD_IN_OUT(fds);
         
-        std::string s = std::to_string(ID);
-        char const *pchar = s.c_str();
-        
-        execlp("/Users/WillJia/Desktop/IOS Lecture/Projects/Pipe/child/main", pchar , NULL);
+        string filename = "/Users/WillJia/Desktop/IOS Lecture/Projects/Pipe/child/main";
+        childExecProgram(filename.c_str());
         
     }else{ /* parent process*/
         
-        // assign ID
-        for(int i = 1; i < 6 ; i++){
-            close(fds[0][READ_END]);
-            ID = i;
-            write(fds[0][WRITE_END], &ID, sizeof(ID));
-        }
+        assignID(fds);
         
-        int singal; /* signal container */
-        int index[5] = {0}; /* flag for sinal which has been received */
-        int flag = 0; /* flag for signal which has not been received */
+        waitForReady(fds );
         
-        while (true) {
-            for (int i = child_to_parent_write_beginning ; i < 10; i+=2) {
-                close(fds[i][WRITE_END]);
-                read(fds[i][READ_END] , &singal , sizeof(singal));
-//                printf("singal = %d\n" , singal);
-                if (singal == 500) {
-                    index[i/2]++;
-                }
-            }
-            
-            for (int i = 0; i < 5 ; i++) {
-                if (index[i] <= 0){
-                    flag++;
-                }
-            }
-            
-            if (flag == 0) {
-                break;
-            }else{
-                flag = 0;
-            }
-        }
+        
     }
     
-    /*  array test
-     int array[5];
-     processFile("/Users/WillJia/Desktop/IOS Lecture/Projects/Pipe/median/input_1.txt", array);
-     for (int i = 0 ; i < 5; i++) {
-     cout << array[i] << endl;
-     }
-     */
 }
