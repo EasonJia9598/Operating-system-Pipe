@@ -169,7 +169,6 @@ int main(int argc, const char * argv[]) {
     }
     
     pid_t pid;
-    int numb;
     // fork 5 children processes
     for (int i = 0 ; i < 5; i++) {
         pid = fork();
@@ -182,6 +181,7 @@ int main(int argc, const char * argv[]) {
     if (pid < 0){/* error occurred*/
         fprintf(stderr, "Fork Failed");
         return 1;
+        
     }else if (pid == 0) { /* child process*/
         /* get ID */
         //close
@@ -195,10 +195,11 @@ int main(int argc, const char * argv[]) {
         
         processFile("/Users/WillJia/Desktop/IOS Lecture/Projects/Pipe/median/input_" + to_string(ID) +  ".txt", array);
         
-        /* array testing
+      /* array testing
         for (int n : array) {
             printf("array number = %d\n" , n);
-        } */
+        }
+       */
         
         /* sending READY to parent */
         close(fds[ID * 2 - 1][READ_END]);
@@ -214,14 +215,15 @@ int main(int argc, const char * argv[]) {
             write(fds[0][WRITE_END], &ID, sizeof(ID));
         }
         
-        int singal;
-        int index[5] = {0};
-        int flag = 0;
+        int singal; /* signal container */
+        int index[5] = {0}; /* flag for sinal which has been received */
+        int flag = 0; /* flag for signal which has not been received */
+        
         while (true) {
             for (int i = child_to_parent_write_beginning ; i < 10; i+=2) {
                 close(fds[i][WRITE_END]);
                 read(fds[i][READ_END] , &singal , sizeof(singal));
-                printf("singal = %d\n" , singal);
+//                printf("singal = %d\n" , singal);
                 if (singal == 500) {
                     index[i/2]++;
                 }
