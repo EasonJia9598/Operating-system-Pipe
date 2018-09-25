@@ -1,3 +1,4 @@
+
 //
 //  main.cpp
 //  median
@@ -43,80 +44,27 @@ using namespace std;
 #define READY 500           //READY
 
 //reading start flag
-#define beginning_index 1
+#define parent_to_child_write_beginning 0
+#define child_to_parent_write_beginning 1
 
 
 
-
+char string0[] = "Hello, this is the parent process";
+char string1[] = "Hi, this is the child 1";
+char string2[] = "Hi, this is the child 2";
 int ID ;
 int msgSingal;
 
 
 
-
 /************************************************************************
  
  
-                        PARENT FUNCTIONS
+ PARENT FUNCTIONS
  
  
  *************************************************************************/
 
-
-/************************************************************************
- 
- Function:        P2C_write
- 
- Description:     parent write to child
- 
- *************************************************************************/
-void P2C_write(int fds[10][2] , int index , const void *__buf , size_t __nbyte){
-    
-    close(fds[index * 2 - 2][READ_END]);
-    write(fds[index * 2 - 2][WRITE_END], __buf, __nbyte);
-}
-
-/************************************************************************
- 
- Function:        P2C_read
- 
- Description:     parent read from child
- 
- *************************************************************************/
-void P2C_read(int fds[10][2] , int index , void *__buf , size_t __nbyte){
-    
-    close(fds[index * 2 - 1][WRITE_END]);                    // close C2P write_end
-    read(fds[index * 2 - 1][READ_END] ,__buf, __nbyte); // start read
-    
-}
-
-
-/************************************************************************
- 
- Function:        C2P_write
- 
- Description:     child write to parent
- 
- *************************************************************************/
-void C2P_write(int fds[10][2] , int index , const void *__buf , size_t __nbyte){
-    
-    close(fds[index * 2 - 1][READ_END]);
-    write(fds[index * 2 - 1][WRITE_END], __buf, __nbyte);
-}
-
-/************************************************************************
- 
- Function:        C2P_read
- 
- Description:     child read from parent
- 
- *************************************************************************/
-void C2P_read(int fds[10][2] , int index , void * __buf , size_t __nbyte){
-    
-    close(fds[index * 2 - 2][WRITE_END]);                    // close C2P write_end
-    read(fds[index * 2 - 2][READ_END] , __buf, __nbyte); // start read
-    
-}
 
 
 
@@ -128,9 +76,11 @@ void C2P_read(int fds[10][2] , int index , void * __buf , size_t __nbyte){
  
  *************************************************************************/
 void assignID(int fds[10][2]){
+    // assign ID
     for(int i = 1; i < 6 ; i++){
+        close(fds[0][READ_END]);
         ID = i;
-        P2C_write(fds, 1, &ID, sizeof(ID));
+        write(fds[0][WRITE_END], &ID, sizeof(ID));
     }
 }
 
@@ -152,23 +102,24 @@ void waitForReady(int fds[10][2]){
     /* keep listening until all child process return message. */
     while (true) {
         
-
-        for (int i = beginning_index ; i < 6 ; i++) {
-
+        for (int i = child_to_parent_write_beginning ; i < 10; i+=2) {
+            
+            //                printf("oringal%d = %s\n" ,i ,  buf);
             memset(buf, 0, sizeof(buf));    // clear buf container
-
-            P2C_read(fds, i, &buf, sizeof(buf));
+            
+            close(fds[i][WRITE_END]);       // close C2P write_end
+            read(fds[i][READ_END] , &buf , sizeof(buf)); // start read
+            
+            //                printf("singal%d = %s\n" ,i ,  buf);
             
             C2P_singal = atoi(buf);         // change char[] buf to int
             
-//            printf("C2P singal %d \n" , C2P_singal);
-            
             if (C2P_singal == 500) {        // if singal = READY
-                index[i-1]++;               // specific child's spot ++
-                printf("Child %d sends READY\n" , i);
+                index[i/2]++;               // specific child's spot ++
+                printf("Child %d sends READY\n" , i/2 + 1);
             }else if(C2P_singal == 2000){   // input has mistake
-                cout << "\n\n******Input file content has mistake*****" << endl;
-                cout << "\n*************Program failed***************\n\n" << endl;
+                cout << "******Input file content has mistake*****" << endl;
+                cout << "*************Program failed**************" << endl;
                 exit(0);                    // exit
             }
         }
@@ -192,7 +143,7 @@ void waitForReady(int fds[10][2]){
 /************************************************************************
  
  
-                        CHILDREN FUNCTIONS
+ CHILDREN FUNCTIONS
  
  
  *************************************************************************/
@@ -208,8 +159,14 @@ void waitForReady(int fds[10][2]){
 
 void childGetID(int fds[10][2]){
     
-    C2P_read(fds, 1, &ID, sizeof(ID));
-
+    /* get ID */
+    //close
+    close(fds[0][WRITE_END]);
+    //read parent message
+    read(fds[0][READ_END], &ID, sizeof(ID));
+    //        printf("Child reads ID = : %d\n", ID);
+    
+    
 }
 
 
@@ -290,10 +247,10 @@ int main(int argc, const char * argv[]) {
     }else if (pid == 0) { /* child process*/
         
         childGetID(fds);
-       
+        
         pipeToSTD_IN_OUT(fds);
         
-        string filename = "/Users/WillJia/Documents/Pipe/child/main";
+        string filename = "/Users/WillJia/Desktop/IOS Lecture/Projects/Pipe/child/main";
         
         childExecProgram(filename.c_str());
         

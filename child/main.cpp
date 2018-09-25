@@ -157,7 +157,7 @@ vector<int> readingArray(){
 //    ID = 1;
     /* reading array */
     vector<int> array;
-    array = processFile("/Users/WillJia/Desktop/IOS Lecture/Projects/Pipe/median/input_" + to_string(ID) +  ".txt");
+    array = processFile("/Users/WillJia/Documents/Pipe/median/input_" + to_string(ID) +  ".txt");
     
     // check capacity of array
     for (int i = 0; i < array.size() ; i++) {
