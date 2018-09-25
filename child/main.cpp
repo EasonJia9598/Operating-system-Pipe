@@ -105,17 +105,18 @@ string readContent(string filename){
  
  *************************************************************************/
 
-void arrayConvert(string content, int array[]){
+vector<int> arrayConvert(string content){
     
+    vector<int> array;
     vector<string> numbers ;
     split(content, ' ', numbers);
     int i = 0;
     for(string n : numbers){
         stringstream geek(n);
-        geek >> array[i];
-        i++;
+        geek >> i;
+        array.push_back(i);
     }
-    
+    return array;
 }
 //https://www.geeksforgeeks.org/converting-strings-numbers-cc/
 
@@ -127,8 +128,8 @@ void arrayConvert(string content, int array[]){
  
  *************************************************************************/
 
-void processFile(string filename, int array[]){
-    arrayConvert(readContent(filename), array);
+vector<int> processFile(string filename){
+   return arrayConvert(readContent(filename));
 }
 
 
@@ -150,18 +151,19 @@ void getID(const char * argv[]){
  Description:     whole procedure of reading array
  
  *************************************************************************/
-void readingArray(int array[]){
+vector<int> readingArray(){
     
     int n = 0;
-    
+//    ID = 1;
     /* reading array */
-
-    processFile("/Users/WillJia/Desktop/IOS Lecture/Projects/Pipe/median/input_" + to_string(ID) +  ".txt", array);
+    vector<int> array;
+    array = processFile("/Users/WillJia/Desktop/IOS Lecture/Projects/Pipe/median/input_" + to_string(ID) +  ".txt");
     
     // check capacity of array
-    for (int i = 0; i < 5 ; i++) {
+    for (int i = 0; i < array.size() ; i++) {
         if (array[i] != 0) {
             n++;
+//            cout << array[i];
         }
     }
     
@@ -170,6 +172,8 @@ void readingArray(int array[]){
     }else{
         cout << 2000;
     }
+    
+    return array;
 }
 
 
@@ -177,10 +181,10 @@ void readingArray(int array[]){
 
 int main(int argc, const char * argv[]) {
     
-    //TODO: change array to vector<int>
-    int array[5];
+    //Done : change array to vector<int>
+    vector<int> array;
     getID(argv);
-    readingArray(array);
+    array = readingArray();
    
     exit(0);
 

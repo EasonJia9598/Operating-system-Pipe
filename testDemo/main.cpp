@@ -250,6 +250,7 @@ int main(int argc, const char * argv[]) {
         pipeToSTD_IN_OUT(fds);
         
         string filename = "/Users/WillJia/Desktop/IOS Lecture/Projects/Pipe/child/main";
+        
         childExecProgram(filename.c_str());
         
     }else{ /* parent process*/
