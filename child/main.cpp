@@ -181,11 +181,47 @@ vector<int> readingArray(){
 
 int main(int argc, const char * argv[]) {
     
+    int buf[1024];
     //Done : change array to vector<int>
     vector<int> array;
     getID(argv);
     array = readingArray();
    
+    //TODO:
+    /* It then enters a while loop (broken by a user defined signal -
+     * which is sent by the parent to terminate the child process).
+     */
+//    while (true) {
+//
+//    }
+    /*
+     * • In each iteration it waits on the parent→child pipe to respond according the codes
+     *   it gets.
+     */
+    
+    
+    /* • If it receives the command REQUEST from parent:
+     *   ■ If its array is empty, write -1 on the child->parent pipe
+     *   ■ Else chose a random element from its array and write it to the child→parent pipe
+     */
+    
+    /* • If it receives the command PIVOT from parent:
+     *   ■ It waits to read another integer (and store it as pivot).
+     *   ■ It then writes the number of integers greater than pivot on the child→parent pipe.
+     *     If it has an empty array, the number would be 0.
+     */
+    
+    
+    /* • If it receives the command SMALL from parent:
+     *   ■ It deletes the elements smaller than the pivot and updates the array.
+     */
+    
+    
+    /* • If it receives the command LARGE from parent:
+     *   ■ It deletes the elements larger than the pivot and updates the array
+     */
+
+        
     exit(0);
 
 }
