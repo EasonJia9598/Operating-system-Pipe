@@ -168,9 +168,27 @@ vector<int> readingArray(){
     }
     
     if (n == 5) {
-        cout << READY;
+//        cout << READY;
+        
+        int ready = READY;
+        
+        std::string s = std::to_string(READY);
+        char const *pchar = s.c_str();
+        write(STDOUT_FILENO, pchar, sizeof(pchar));
+        
+//        write(STDOUT_FILENO, &ready, sizeof(ready));
+
+        
     }else{
-        cout << 2000;
+//        cout << 2000;
+
+        int error = 2000;
+        
+        std::string s = std::to_string(error);
+        char const *pchar = s.c_str();
+        write(STDOUT_FILENO, pchar, sizeof(pchar));
+        
+//        write(STDOUT_FILENO, &error, sizeof(error));
     }
     
     return array;
@@ -181,7 +199,7 @@ vector<int> readingArray(){
 
 int main(int argc, const char * argv[]) {
     
-    int buf[1024];
+    char buf[1024];
     //Done : change array to vector<int>
     vector<int> array;
     getID(argv);
@@ -191,9 +209,12 @@ int main(int argc, const char * argv[]) {
     /* It then enters a while loop (broken by a user defined signal -
      * which is sent by the parent to terminate the child process).
      */
-//    while (true) {
-//
-//    }
+    while (true) {
+        read(STDIN_FILENO, &buf, sizeof(buf));
+        write(STDOUT_FILENO, buf, sizeof(buf));
+        exit(0);
+    }
+
     /*
      * • In each iteration it waits on the parent→child pipe to respond according the codes
      *   it gets.

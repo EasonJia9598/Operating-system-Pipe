@@ -63,6 +63,13 @@ int msgSingal;
  *************************************************************************/
 
 
+/** piping index rules :
+ * even number for parent-to-children's write_communication
+ * index = id * 2 - 2
+ * odd  number for children-to-parent's write_communication
+ * index = id * 2 - 1
+ */
+
 /************************************************************************
  
  Function:        P2C_write
@@ -78,12 +85,12 @@ void P2C_write(int fds[10][2] , int index , const void *__buf , size_t __nbyte){
 
 /************************************************************************
  
- Function:        P2C_read
+ Function:        P_from_C_read
  
  Description:     parent read from child
  
  *************************************************************************/
-void P2C_read(int fds[10][2] , int index , void *__buf , size_t __nbyte){
+void P_from_C_read(int fds[10][2] , int index , void *__buf , size_t __nbyte){
     
     close(fds[index * 2 - 1][WRITE_END]);                    // close C2P write_end
     read(fds[index * 2 - 1][READ_END] ,__buf, __nbyte); // start read
@@ -106,12 +113,12 @@ void C2P_write(int fds[10][2] , int index , const void *__buf , size_t __nbyte){
 
 /************************************************************************
  
- Function:        C2P_read
+ Function:        C_from_P_read
  
  Description:     child read from parent
  
  *************************************************************************/
-void C2P_read(int fds[10][2] , int index , void * __buf , size_t __nbyte){
+void C_from_P_read(int fds[10][2] , int index , void * __buf , size_t __nbyte){
     
     close(fds[index * 2 - 2][WRITE_END]);                    // close C2P write_end
     read(fds[index * 2 - 2][READ_END] , __buf, __nbyte); // start read
@@ -151,14 +158,9 @@ void waitForReady(int fds[10][2]){
     char buf[1024];
     /* keep listening until all child process return message. */
     while (true) {
-        
-
         for (int i = beginning_index ; i < 6 ; i++) {
-
             memset(buf, 0, sizeof(buf));    // clear buf container
-
-            P2C_read(fds, i, &buf, sizeof(buf));
-            
+            P_from_C_read(fds, i, &buf, sizeof(buf));
             C2P_singal = atoi(buf);         // change char[] buf to int
             
 //            printf("C2P singal %d \n" , C2P_singal);
@@ -188,6 +190,21 @@ void waitForReady(int fds[10][2]){
     }
 }
 
+/************************************************************************
+ 
+ Function:        p_send_signal
+ 
+ Description:     parent send signal to  all child
+ 
+ *************************************************************************/
+
+void p_send_signal(int fds[10][2] , int index , int signal ){
+    
+    std::string s = std::to_string(signal);
+    char const *pchar = s.c_str();
+    P2C_write(fds, index, pchar, sizeof(pchar));
+    
+}
 
 /************************************************************************
  
@@ -208,7 +225,7 @@ void waitForReady(int fds[10][2]){
 
 void childGetID(int fds[10][2]){
     
-    C2P_read(fds, 1, &ID, sizeof(ID));
+    C_from_P_read(fds, 1, &ID, sizeof(ID)); // use 0 pipe for original communicating
 
 }
 
@@ -222,6 +239,15 @@ void childGetID(int fds[10][2]){
  
  *************************************************************************/
 void pipeToSTD_IN_OUT(int fds[10][2]){
+    
+    /* initialize pipe. */
+    
+    /** piping index rules :
+     * even number for parent-to-children's write_communication
+     * index = id * 2 - 2
+     * odd  number for children-to-parent's write_communication
+     * index = id * 2 - 1
+     */
     
     /* change pipe into std::in and std::out mode */
     close(fds[ID * 2 - 2][WRITE_END]); // close P2C write end
@@ -260,20 +286,14 @@ void childExecProgram(const char* filename){
 int main(int argc, const char * argv[]) {
     
     int fds[10][2];
+    char buf[1024];
     
-    /* initialize pipe. */
-    
-    /** piping index rules :
-     * even number for parent-to-children's write_communication
-     * index = id * 2 - 2
-     * odd  number for children-to-parent's write_communication
-     * index = id * 2 - 1
-     */
     for (int i = 0; i < 10; i++) {
         pipe(fds[i]);
     }
     
     pid_t pid;
+    
     // fork 5 children processes
     for (int i = 0 ; i < 5; i++) {
         pid = fork();
@@ -288,12 +308,11 @@ int main(int argc, const char * argv[]) {
         return 1;
         
     }else if (pid == 0) { /* child process*/
-        
         childGetID(fds);
        
         pipeToSTD_IN_OUT(fds);
         
-        string filename = "/Users/WillJia/Documents/Pipe/child/main";
+        string filename = "/Users/WillJia/Documents/Pipe/child/child";
         
         childExecProgram(filename.c_str());
         
@@ -303,6 +322,19 @@ int main(int argc, const char * argv[]) {
         
         waitForReady(fds );
         
+//////
+        for (int i = beginning_index ; i < 6;i++) {
+            p_send_signal(fds, i, REQUEST);
+        }
+////
+        for (int i = beginning_index; i < 6; i++) {
+            P_from_C_read(fds, i, buf, sizeof(buf));
+            printf("%s" , buf);
+        }
+//
+
+        
+        cout << "jj";
         
     }
     
