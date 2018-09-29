@@ -19,6 +19,9 @@
 #include <sstream>
 #include <cstdlib>
 #include <array>
+#include <cstdlib>
+#include <ctime>
+
 
 using namespace std;
 
@@ -32,6 +35,7 @@ using namespace std;
 #define LARGE 300   //LARGE
 #define SMALL 400   //SMALL
 #define READY 500   //READY
+#define BREAK 2000  //BREAK
 
 //reading start flag
 #define parent_to_child_write_beginning 0
@@ -48,6 +52,7 @@ using namespace std;
 
 
 int ID ; // child ID
+int pivot_num;
 
 /************************************************************************
  
@@ -56,6 +61,22 @@ int ID ; // child ID
  
  
  *************************************************************************/
+
+
+/************************************************************************
+ 
+ Function:        num_2_char
+ 
+ Description:     change number to char for passing value in pipe
+ 
+ *************************************************************************/
+
+
+char const* num_2_char(int n ){
+    std::string s = std::to_string(n);
+    char const *pchar = s.c_str();
+    return pchar;
+}
 
 /************************************************************************
  
@@ -170,10 +191,7 @@ vector<int> readingArray(){
     if (n == 5) {
 //        cout << READY;
         
-        int ready = READY;
-        
-        std::string s = std::to_string(READY);
-        char const *pchar = s.c_str();
+        char const *pchar = num_2_char(READY);
         write(STDOUT_FILENO, pchar, sizeof(pchar));
         
 //        write(STDOUT_FILENO, &ready, sizeof(ready));
@@ -182,10 +200,7 @@ vector<int> readingArray(){
     }else{
 //        cout << 2000;
 
-        int error = 2000;
-        
-        std::string s = std::to_string(error);
-        char const *pchar = s.c_str();
+        char const *pchar = num_2_char(BREAK);
         write(STDOUT_FILENO, pchar, sizeof(pchar));
         
 //        write(STDOUT_FILENO, &error, sizeof(error));
@@ -194,6 +209,100 @@ vector<int> readingArray(){
     return array;
 }
 
+/************************************************************************
+ 
+ Function:        request_func
+ 
+ Description:     return random value in array,return -1 if array is empty.
+ 
+ *************************************************************************/
+
+void request_func(vector<int> &array){
+    
+    srand(time(NULL));
+    
+    if (array.size() == 0) {
+        char const *pchar = num_2_char(-1);
+        write(STDOUT_FILENO, pchar, sizeof(pchar));
+    }else{
+        char const *pchar = num_2_char(array[(rand() % array.size())]);
+        write(STDOUT_FILENO, pchar, sizeof(pchar));
+    }
+}
+
+/************************************************************************
+ 
+ Function:        pivot_func
+ 
+ Description:     return Large number than pivot
+ 
+ *************************************************************************/
+
+void pivot_func(vector<int> &array){
+    char buf[1024];
+    int index = 0;
+    memset(buf, 0, sizeof(buf));    // clear buf container
+    read(STDIN_FILENO, &buf, sizeof(buf));
+    pivot_num = atoi(buf);
+
+    for (int i = 0; i < array.size(); i++) {
+        if (array[i] > pivot_num) {
+            index++;
+        }
+    }
+    char const *pchar = num_2_char(index);
+    write(STDOUT_FILENO, pchar, sizeof(pchar));
+}
+
+/************************************************************************
+ 
+ Function:        small_func
+ 
+ Description:     delete Large number than pivot
+ 
+ *************************************************************************/
+void small_func(vector<int> &array){
+    
+    for (int i = 0; i < array.size(); i++) {
+        if (array[i] < pivot_num) {
+            array.erase(array.begin()+i);
+            i--;
+        }
+    }
+    int size = array.size();
+    char const *pchar = num_2_char(size);
+    write(STDOUT_FILENO, pchar, sizeof(pchar));
+    
+}
+
+/************************************************************************
+ 
+ Function:        large_func
+ 
+ Description:     delete Large number than pivot
+ 
+ *************************************************************************/
+void large_func(vector<int> &array){
+    
+    for (int i = 0; i < array.size(); i++) {
+        if (array[i] > pivot_num) {
+            array.erase(array.begin()+i);
+            i--;
+        }
+    }
+    
+    int size;
+    
+    if (array.empty()) {
+        size = 0;
+    }else{
+        size = array.size();
+    }
+    
+    char const *pchar = num_2_char(size);
+    write(STDOUT_FILENO, pchar, sizeof(pchar));
+    
+}
 
 
 
@@ -210,39 +319,69 @@ int main(int argc, const char * argv[]) {
      * which is sent by the parent to terminate the child process).
      */
     while (true) {
-        read(STDIN_FILENO, &buf, sizeof(buf));
-        write(STDOUT_FILENO, buf, sizeof(buf));
-        exit(0);
-    }
-
+        
     /*
      * • In each iteration it waits on the parent→child pipe to respond according the codes
      *   it gets.
      */
-    
-    
+        
+        // read signal from parent
+        read(STDIN_FILENO, &buf, sizeof(buf));
+        int signal = atoi(buf);
+        
+        
+        if (signal == BREAK) {
+            exit(0);
+        }
+
+        switch (signal) {
+                
     /* • If it receives the command REQUEST from parent:
      *   ■ If its array is empty, write -1 on the child->parent pipe
      *   ■ Else chose a random element from its array and write it to the child→parent pipe
      */
-    
+            case REQUEST:
+                request_func(array);
+                break;
+                
     /* • If it receives the command PIVOT from parent:
      *   ■ It waits to read another integer (and store it as pivot).
      *   ■ It then writes the number of integers greater than pivot on the child→parent pipe.
      *     If it has an empty array, the number would be 0.
      */
-    
-    
+            case PIVOT:
+                pivot_func(array);
+                break;
+                
     /* • If it receives the command SMALL from parent:
      *   ■ It deletes the elements smaller than the pivot and updates the array.
      */
-    
-    
+            case SMALL:
+                small_func(array);
+                break;
+                
     /* • If it receives the command LARGE from parent:
      *   ■ It deletes the elements larger than the pivot and updates the array
      */
 
+            case LARGE:
+                large_func(array);
+                break;
+            default:
+                break;
+        }
         
-    exit(0);
+        
+    }
+
+    
+    
+    
+  
+    
+   
+    
+  
+        
 
 }

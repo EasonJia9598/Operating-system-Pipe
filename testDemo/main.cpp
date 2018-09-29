@@ -28,6 +28,8 @@
 #include <fstream>
 #include <vector>
 #include <sstream>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
@@ -41,7 +43,7 @@ using namespace std;
 #define LARGE 300           //LARGE
 #define SMALL 400           //SMALL
 #define READY 500           //READY
-
+#define BREAK 2000          //BREAK
 //reading start flag
 #define beginning_index 1
 
@@ -50,7 +52,7 @@ using namespace std;
 
 int ID ;
 int msgSingal;
-
+int n = 5;
 
 
 
@@ -318,24 +320,123 @@ int main(int argc, const char * argv[]) {
         
     }else{ /* parent process*/
         
+        /*
+         • It allots ids 1-5 to each of the children and sends the same along the parent→child pipe.
+         */
         assignID(fds);
-        
+        /*
+         • The parent waits on all the child→parent pipes until it receives the code READY from all
+         child processes. This ensures that the algorithm initiates only after all child processes
+         have read the input completely.
+         */
         waitForReady(fds );
         
-//////
+       
+        /*
+         • The parent instantiates k = n/2 (we find the kth smallest element in the array – to find
+         median, we require k=n/2).
+         */
+        int k = n / 2;
+        
+        /*
+         • The parent selects a random child and queries it for a random element.
+         •
+         • The parent sends the command REQUEST to a random child.
+         */
+        srand(time(NULL));
+        
+        int index = rand() % n;
+        
+        
+        /*
+         • It then reads the response from the child along the corresponding child→parent pipe. If
+         the response is -1, it repeats the same again. If not, it continues.
+         */
+        
+        /*
+         • The first non-negative value forms our pivot element.
+         •
+         • The parent subsequently broadcasts this pivot element to all its child processes. To do the
+         same, it first writes the code PIVOT along each of the parent→child pipes and
+         subsequently writes the value of the pivot element.
+         •
+         */
+        
+        /*
+         • It then reads the response from each child. This represents the number of elements larger
+         than the pivot in that child.
+         */
+        
+        /*
+         • It sums up the total from all its children, call it m. if m = k, there are n/2 elements larger
+         than pivot in the data set. Thus, pivot is the median. (Make sure you handle even values
+         correctly).
+         */
+        
+        /*
+         • If m>k, it sends the command SMALL to all its children which signifies that the children
+         should drop all elements smaller than the pivot element. (Since the median would lie on
+         the right)
+         */
+        
+        /*
+         • if m<k, it sends the command LARGE to all its children which signifies that the children
+         should drop all elements larger than the pivot element. (Since the median would lie on the
+         left). It also updates k = k - m. (Find out why?)
+         */
+        
+        /*
+         • It then repeats the REQUEST until it finds the median.
+         • Once the median is found, the parent reports it and sends a user-defined signal to all its
+         children - and the child processes exit after handling the signal
+         */
+        
+        /*
+         **
         for (int i = beginning_index ; i < 6;i++) {
             p_send_signal(fds, i, REQUEST);
         }
-////
+        
         for (int i = beginning_index; i < 6; i++) {
             P_from_C_read(fds, i, buf, sizeof(buf));
-            printf("%s" , buf);
+            printf("random number %s\n" , buf);
         }
-//
+        
+        for (int i = beginning_index ; i < 6;i++) {
+            p_send_signal(fds, i, PIVOT);
+        }
 
+        for (int i = beginning_index ; i < 6;i++) {
+            p_send_signal(fds, i, 13);
+        }
         
-        cout << "jj";
+        for (int i = beginning_index; i < 6; i++) {
+            P_from_C_read(fds, i, buf, sizeof(buf));
+            printf("number large than 13 %s\n" , buf);
+        }
         
+        for (int i = beginning_index ; i < 6;i++) {
+            p_send_signal(fds, i, SMALL);
+        }
+
+
+        for (int i = beginning_index; i < 6; i++) {
+            P_from_C_read(fds, i, buf, sizeof(buf));
+            printf("SMALL after: array size %s\n" , buf);
+        }
+
+
+        for (int i = beginning_index ; i < 6;i++) {
+            p_send_signal(fds, i, LARGE);
+        }
+        
+        
+        for (int i = beginning_index; i < 6; i++) {
+            P_from_C_read(fds, i, buf, sizeof(buf));
+            printf("%d LARGE after: array size %s\n" , i, buf);
+        }
+      
+        **/
     }
     
 }
