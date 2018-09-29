@@ -19,7 +19,6 @@
 #include <sstream>
 #include <cstdlib>
 #include <array>
-#include <cstdlib>
 #include <ctime>
 
 
@@ -53,6 +52,7 @@ using namespace std;
 
 int ID ; // child ID
 int pivot_num;
+
 
 /************************************************************************
  
@@ -218,11 +218,11 @@ vector<int> readingArray(){
  *************************************************************************/
 
 void request_func(vector<int> &array){
+
     
-    srand(time(NULL));
-    
-    if (array.size() == 0) {
-        char const *pchar = num_2_char(-1);
+    if (array.empty()) {
+        int n = -1;
+        char const *pchar = num_2_char(n);
         write(STDOUT_FILENO, pchar, sizeof(pchar));
     }else{
         char const *pchar = num_2_char(array[(rand() % array.size())]);
@@ -240,18 +240,22 @@ void request_func(vector<int> &array){
 
 void pivot_func(vector<int> &array){
     char buf[1024];
-    int index = 0;
-    memset(buf, 0, sizeof(buf));    // clear buf container
+
     read(STDIN_FILENO, &buf, sizeof(buf));
     pivot_num = atoi(buf);
 
-    for (int i = 0; i < array.size(); i++) {
-        if (array[i] > pivot_num) {
+    int index = 0;
+
+    for (int n : array) {
+        if (n > pivot_num) {
             index++;
         }
     }
     char const *pchar = num_2_char(index);
     write(STDOUT_FILENO, pchar, sizeof(pchar));
+    
+  
+   
 }
 
 /************************************************************************
@@ -263,13 +267,13 @@ void pivot_func(vector<int> &array){
  *************************************************************************/
 void small_func(vector<int> &array){
     
-    for (int i = 0; i < array.size(); i++) {
+    for (int i = 0; i < (int)array.size(); i++) {
         if (array[i] < pivot_num) {
             array.erase(array.begin()+i);
             i--;
         }
     }
-    int size = array.size();
+    int size = (int)array.size();
     char const *pchar = num_2_char(size);
     write(STDOUT_FILENO, pchar, sizeof(pchar));
     
@@ -284,7 +288,7 @@ void small_func(vector<int> &array){
  *************************************************************************/
 void large_func(vector<int> &array){
     
-    for (int i = 0; i < array.size(); i++) {
+    for (int i = 0; i < (int)array.size(); i++) {
         if (array[i] > pivot_num) {
             array.erase(array.begin()+i);
             i--;
@@ -292,7 +296,7 @@ void large_func(vector<int> &array){
     }
     
     int size;
-    
+
     if (array.empty()) {
         size = 0;
     }else{
@@ -307,7 +311,7 @@ void large_func(vector<int> &array){
 
 
 int main(int argc, const char * argv[]) {
-    
+    srand(time(NULL));
     char buf[1024];
     //Done : change array to vector<int>
     vector<int> array;
@@ -329,10 +333,6 @@ int main(int argc, const char * argv[]) {
         read(STDIN_FILENO, &buf, sizeof(buf));
         int signal = atoi(buf);
         
-        
-        if (signal == BREAK) {
-            exit(0);
-        }
 
         switch (signal) {
                 
@@ -367,21 +367,12 @@ int main(int argc, const char * argv[]) {
             case LARGE:
                 large_func(array);
                 break;
-            default:
+            case BREAK:
+                exit(0);
                 break;
         }
         
         
     }
-
-    
-    
-    
-  
-    
-   
-    
-  
-        
 
 }

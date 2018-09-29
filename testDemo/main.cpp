@@ -30,6 +30,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <ctime>
+//#include <time.h>       /* time */
 
 using namespace std;
 
@@ -194,13 +195,13 @@ void waitForReady(int fds[10][2]){
 
 /************************************************************************
  
- Function:        p_send_signal
+ Function:        p2c_send_signal
  
  Description:     parent send signal to  all child
  
  *************************************************************************/
 
-void p_send_signal(int fds[10][2] , int index , int signal ){
+void p2c_send_signal(int fds[10][2] , int index , int signal ){
     
     std::string s = std::to_string(signal);
     char const *pchar = s.c_str();
@@ -336,61 +337,153 @@ int main(int argc, const char * argv[]) {
          • The parent instantiates k = n/2 (we find the kth smallest element in the array – to find
          median, we require k=n/2).
          */
-        int k = n / 2;
-        
-        /*
-         • The parent selects a random child and queries it for a random element.
-         •
-         • The parent sends the command REQUEST to a random child.
-         */
-        srand(time(NULL));
-        
-        int index = rand() % n;
+        int k = 25 / 2;
+       
         
         
-        /*
-         • It then reads the response from the child along the corresponding child→parent pipe. If
-         the response is -1, it repeats the same again. If not, it continues.
-         */
-        
-        /*
-         • The first non-negative value forms our pivot element.
-         •
-         • The parent subsequently broadcasts this pivot element to all its child processes. To do the
-         same, it first writes the code PIVOT along each of the parent→child pipes and
-         subsequently writes the value of the pivot element.
-         •
-         */
-        
-        /*
-         • It then reads the response from each child. This represents the number of elements larger
-         than the pivot in that child.
-         */
-        
-        /*
-         • It sums up the total from all its children, call it m. if m = k, there are n/2 elements larger
-         than pivot in the data set. Thus, pivot is the median. (Make sure you handle even values
-         correctly).
-         */
-        
-        /*
-         • If m>k, it sends the command SMALL to all its children which signifies that the children
-         should drop all elements smaller than the pivot element. (Since the median would lie on
-         the right)
-         */
-        
-        /*
-         • if m<k, it sends the command LARGE to all its children which signifies that the children
-         should drop all elements larger than the pivot element. (Since the median would lie on the
-         left). It also updates k = k - m. (Find out why?)
-         */
+        int request_id ;
         
         /*
          • It then repeats the REQUEST until it finds the median.
          • Once the median is found, the parent reports it and sends a user-defined signal to all its
          children - and the child processes exit after handling the signal
          */
+
+        srand(time(NULL));
         
+        while (true) {
+            // Request
+
+            while (true) {
+                /*
+                 • The parent selects a random child and queries it for a random element.
+                 •
+                 • The parent sends the command REQUEST to a random child.
+                 */
+                request_id = rand() % 5 + 1;
+                
+                p2c_send_signal(fds, request_id, REQUEST);
+                
+                /*
+                 • It then reads the response from the child along the corresponding child→parent pipe.
+                 If the response is -1, it repeats the same again. If not, it continues.
+                 */
+                P_from_C_read(fds, request_id, buf, sizeof(buf));
+                if (atoi(buf) != -1) {
+                    break;
+                }
+            }
+            printf("*************************\n");
+
+            printf("Parent sends REQUEST to Child %d\n" , request_id);
+            /*
+             • The first non-negative value forms our pivot element.
+             */
+            int pivot_p = atoi(buf);
+            
+            printf("Child %d sends %d to parent\n", request_id , pivot_p);
+            
+            /*
+             • The parent subsequently broadcasts this pivot element to all its child processes.
+             To do the same, it first writes the code PIVOT along each of the parent→child pipes and
+             subsequently writes the value of the pivot element.
+             */
+            
+            printf("Parent broadcasts pivot %d to all children\n", pivot_p);
+
+            
+            for (int i = beginning_index; i < 6; i++) {
+                p2c_send_signal(fds, i, PIVOT);
+            }
+            
+            for (int i = beginning_index; i < 6; i++) {
+                p2c_send_signal(fds, i, pivot_p);
+            }
+            
+            
+            /*
+             • It then reads the response from each child. This represents the number of elements
+             larger than the pivot in that child.
+             It sums up the total from all its children, call it m.
+             */
+            int m = 0;
+            int num[5] = {0};
+            
+            for (int i = beginning_index; i < 6 ; i++) {
+                
+                P_from_C_read(fds, i, buf, sizeof(buf));
+                printf("Child %d receives pivot and replies %s\n",i  , buf);
+
+                num[i - 1] = atoi(buf);
+                m += atoi(buf);
+            }
+            
+            
+    
+            
+            printf("Parent: m = ");
+            for (int i = 0; i < n - 1; i++) {
+                printf("%d + ",num[i]);
+            }
+            printf("%d. = %d \n" , num[n-1] ,m );
+            
+            /*
+             • if m = k, there are n/2 elements larger
+             than pivot in the data set. Thus, pivot is the median. (Make sure you handle even values
+             correctly).
+             */
+            printf("k ========= =====  %d  \n" , k);
+
+            if (k == m) {
+                printf("Median found!\n " );
+                for (int i = beginning_index; i < 6; i++) {
+                    p2c_send_signal(fds, i, BREAK);
+                }
+                break;
+            }else if( k < m ){
+                printf("Median not found!  Send SMALL to children\n" );
+
+                /*
+                 • If m>k, it sends the command SMALL to all its children which signifies that the children
+                 should drop all elements smaller than the pivot element. (Since the median would lie on
+                 the right)
+                 */
+                for (int i = beginning_index; i < 6; i++) {
+                    p2c_send_signal(fds, i, SMALL);
+                }
+                for (int i = beginning_index; i < 6; i++) {
+                    P_from_C_read(fds, i, buf, sizeof(buf));
+                    printf("SMALL after: array size %s\n" , buf);
+                }
+
+                
+
+            }else if(k > m) {
+                printf("Median not found!  Send LARGE to children\n" );
+
+                /*
+                 • if m<k, it sends the command LARGE to all its children which signifies that the children
+                 should drop all elements larger than the pivot element. (Since the median would lie on the
+                 left). It also updates k = k - m. (Find out why?)
+                 */
+                
+                for (int i = beginning_index; i< 6; i++) {
+                    p2c_send_signal(fds, i, LARGE);
+                }
+                for (int i = beginning_index; i < 6; i++) {
+                    P_from_C_read(fds, i, buf, sizeof(buf));
+                    printf("Large after: array size %s\n" , buf);
+                }
+                k = k - m ;
+
+            }
+            
+            
+
+          
+        }
+        
+
         /*
          **
         for (int i = beginning_index ; i < 6;i++) {
@@ -437,6 +530,6 @@ int main(int argc, const char * argv[]) {
         }
       
         **/
-    }
+    } // end parent
     
 }
