@@ -62,7 +62,7 @@ int n = 5;
 /************************************************************************
  
  
-                        PARENT FUNCTIONS
+ PARENT FUNCTIONS
  
  
  *************************************************************************/
@@ -168,7 +168,7 @@ void waitForReady(int fds[10][2]){
             P_from_C_read(fds, i, &buf, sizeof(buf));
             C2P_singal = atoi(buf);         // change char[] buf to int
             
-//            printf("C2P singal %d \n" , C2P_singal);
+            //            printf("C2P singal %d \n" , C2P_singal);
             
             if (C2P_singal == 500) {        // if singal = READY
                 index[i-1]++;               // specific child's spot ++
@@ -214,7 +214,7 @@ void p2c_send_signal(int fds[10][2] , int index , int signal ){
 /************************************************************************
  
  
-                        CHILDREN FUNCTIONS
+ CHILDREN FUNCTIONS
  
  
  *************************************************************************/
@@ -231,7 +231,7 @@ void p2c_send_signal(int fds[10][2] , int index , int signal ){
 void childGetID(int fds[10][2]){
     
     C_from_P_read(fds, 1, &ID, sizeof(ID)); // use 0 pipe for original communicating
-
+    
 }
 
 
@@ -314,10 +314,10 @@ int main(int argc, const char * argv[]) {
         
     }else if (pid == 0) { /* child process*/
         childGetID(fds);
-       
+        
         pipeToSTD_IN_OUT(fds);
         
-        string filename = "/Users/WillJia/Documents/Pipe/child/child";
+        string filename = "/root/AS1/child";
         
         childExecProgram(filename.c_str());
         
@@ -334,14 +334,14 @@ int main(int argc, const char * argv[]) {
          */
         waitForReady(fds );
         
-       
+        
         /*
          • The parent instantiates k = n/2 (we find the kth smallest element in the array – to find
          median, we require k=n/2).
          */
         
         int k = 25 / 2;
-       
+        
         
         
         int request_id ;
@@ -351,7 +351,7 @@ int main(int argc, const char * argv[]) {
          • Once the median is found, the parent reports it and sends a user-defined signal to all its
          children - and the child processes exit after handling the signal
          */
-
+        
         srand(time(NULL));
         
         while (true) {
@@ -360,7 +360,7 @@ int main(int argc, const char * argv[]) {
             printf("************************************\n");
             printf("No. %d Try!!\n" , times);
             printf("************************************\n");
-
+            
             while (true) {
                 /*
                  • The parent selects a random child and queries it for a random element.
@@ -380,8 +380,8 @@ int main(int argc, const char * argv[]) {
                     break;
                 }
             }
-//            printf("*************************\n");
-
+            //            printf("*************************\n");
+            
             printf("Parent sends REQUEST to Child %d\n" , request_id);
             /*
              • The first non-negative value forms our pivot element.
@@ -397,7 +397,7 @@ int main(int argc, const char * argv[]) {
              */
             
             printf("Parent broadcasts pivot %d to all children\n", pivot_p);
-
+            
             
             for (int i = beginning_index; i < 6; i++) {
                 p2c_send_signal(fds, i, PIVOT);
@@ -420,13 +420,13 @@ int main(int argc, const char * argv[]) {
                 
                 P_from_C_read(fds, i, buf, sizeof(buf));
                 printf("Child %d receives pivot and replies %s\n",i  , buf);
-
+                
                 num[i - 1] = atoi(buf);
                 m += atoi(buf);
             }
             
             
-    
+            
             
             printf("Parent: m = ");
             for (int i = 0; i < n - 1; i++) {
@@ -439,8 +439,8 @@ int main(int argc, const char * argv[]) {
              than pivot in the data set. Thus, pivot is the median. (Make sure you handle even values
              correctly).
              */
-//            printf("k ========= =====  %d  \n" , k);
-
+            //            printf("k ========= =====  %d  \n" , k);
+            
             if (k == m) {
                 printf("12 = 25/2 Median found! Pivot is %d !!\n",pivot_p );
                 
@@ -457,7 +457,7 @@ int main(int argc, const char * argv[]) {
                 break;
             }else if( k < m ){
                 printf("\nMedian not found!  Send SMALL to children\n" );
-
+                
                 /*
                  • If m>k, it sends the command SMALL to all its children which signifies that the children
                  should drop all elements smaller than the pivot element. (Since the median would lie on
@@ -470,12 +470,12 @@ int main(int argc, const char * argv[]) {
                     P_from_C_read(fds, i, buf, sizeof(buf));
                     printf("SMALL after: array size %s\n" , buf);
                 }
-
                 
-
+                
+                
             }else if(k > m) {
                 printf("\nMedian not found!  Send LARGE to children\n" );
-
+                
                 /*
                  • if m<k, it sends the command LARGE to all its children which signifies that the children
                  should drop all elements larger than the pivot element. (Since the median would lie on the
@@ -490,14 +490,14 @@ int main(int argc, const char * argv[]) {
                     printf("Large after: array size %s\n" , buf);
                 }
                 k = k - m ;
-
+                
             }
             
             
-
-          
+            
+            
         }
-    
+        
     } // end parent
     
 }

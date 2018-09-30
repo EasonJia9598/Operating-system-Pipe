@@ -34,7 +34,10 @@ using namespace std;
 #define LARGE 300   //LARGE
 #define SMALL 400   //SMALL
 #define READY 500   //READY
+#define SUM 600     //SUM
+
 #define BREAK 2000  //BREAK
+#define TERMINATE 4000  //TERMINATE
 
 //reading start flag
 #define parent_to_child_write_beginning 0
@@ -52,7 +55,6 @@ using namespace std;
 
 int ID ; // child ID
 int pivot_num;
-
 
 /************************************************************************
  
@@ -276,7 +278,7 @@ void small_func(vector<int> &array){
     int size = (int)array.size();
     char const *pchar = num_2_char(size);
     write(STDOUT_FILENO, pchar, sizeof(pchar));
-    
+
 }
 
 /************************************************************************
@@ -302,22 +304,22 @@ void large_func(vector<int> &array){
     }else{
         size = array.size();
     }
-    
+
     char const *pchar = num_2_char(size);
     write(STDOUT_FILENO, pchar, sizeof(pchar));
-    
+
 }
 
 
 
 int main(int argc, const char * argv[]) {
     srand(time(NULL));
-    char buf[1024];
+    char buf[2048];
     //Done : change array to vector<int>
     vector<int> array;
     getID(argv);
     array = readingArray();
-   
+        
     //TODO:
     /* It then enters a while loop (broken by a user defined signal -
      * which is sent by the parent to terminate the child process).
@@ -368,6 +370,8 @@ int main(int argc, const char * argv[]) {
                 large_func(array);
                 break;
             case BREAK:
+                char const* tchar = num_2_char(TERMINATE);
+                write(STDOUT_FILENO, tchar, sizeof(tchar));
                 exit(0);
                 break;
         }
