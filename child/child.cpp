@@ -180,6 +180,7 @@ vector<int> readingArray(){
 //    ID = 1;
     /* reading array */
     vector<int> array;
+    string info ;
     array = processFile("/Users/WillJia/Documents/Pipe/median/input_" + to_string(ID) +  ".txt");
 //    array = processFile("input_" + to_string(ID) +  ".txt");
     
@@ -187,13 +188,18 @@ vector<int> readingArray(){
     for (int i = 0; i < array.size() ; i++) {
         if (array[i] != 0) {
             n++;
+            info.append(to_string(array[i]));
+            info.append("   ");
 //            cout << array[i];
         }
     }
     
     if (n == 5) {
 //        cout << READY;
+        char const *pstar = info.c_str();
+        write(STDOUT_FILENO, pstar, sizeof(pstar));
         
+//        sleep(1);
         char const *pchar = num_2_char(READY);
         write(STDOUT_FILENO, pchar, sizeof(pchar));
         

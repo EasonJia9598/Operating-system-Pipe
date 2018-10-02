@@ -86,7 +86,7 @@ int n = 5;
  *************************************************************************/
 
 void sleep_gap(){
-    sleep(0.5);
+    sleep(1);
 }
 
 /************************************************************************
@@ -180,6 +180,11 @@ void waitForReady(int fds[10][2]){
         for (int i = beginning_index ; i < 6 ; i++) {
             memset(buf, 0, sizeof(buf));    // clear buf container
             P_from_C_read(fds, i, &buf, sizeof(buf));
+            printf("Array %d contains %s\n" , i , buf);
+//            sleep(2);
+            memset(buf, 0, sizeof(buf));    // clear buf container
+            P_from_C_read(fds, i, &buf, sizeof(buf));
+            
             C2P_singal = atoi(buf);         // change char[] buf to int
             
 //            printf("C2P singal %d \n" , C2P_singal);
@@ -305,6 +310,8 @@ void childExecProgram(const char* filename){
 
 
 int main(int argc, const char * argv[]) {
+    
+    printf("Process communication program begin.\n");
     
     int fds[10][2];
     char buf[1024];
