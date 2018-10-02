@@ -50,6 +50,8 @@ using namespace std;
 //reading start flag
 #define beginning_index 1
 
+//sleep time
+#define TIME 1
 
 
 
@@ -84,7 +86,7 @@ int n = 5;
  *************************************************************************/
 
 void sleep_gap(){
-    sleep(0.6);
+    sleep(0.5);
 }
 
 /************************************************************************
@@ -295,7 +297,9 @@ void childExecProgram(const char* filename){
     char const *pchar = s.c_str();
     
     /* drop child process, change into a new  running program */
-    execlp(filename, pchar , NULL);
+    if (execlp(filename, pchar , NULL)<0){
+        printf("Wrong!!");
+    }
     
 }
 
@@ -314,6 +318,7 @@ int main(int argc, const char * argv[]) {
     // fork 5 children processes
     for (int i = 0 ; i < 5; i++) {
         pid = fork();
+        sleep(TIME);
         if(pid == 0 || pid == -1){
             break;
             //Ref : https://blog.csdn.net/cupidove/article/details/9297335
@@ -329,8 +334,9 @@ int main(int argc, const char * argv[]) {
        
         pipeToSTD_IN_OUT(fds);
         
+//        string filename = "/home/student/z_jia/AS1/child";
         string filename = "/Users/WillJia/Documents/Pipe/child/child";
-        
+
         childExecProgram(filename.c_str());
         
     }else{ /* parent process*/
@@ -364,7 +370,7 @@ int main(int argc, const char * argv[]) {
          children - and the child processes exit after handling the signal
          */
 
-        srand(time(NULL));
+        srand((int)time(NULL));
         
         while (true) {
             // Request
@@ -388,6 +394,7 @@ int main(int argc, const char * argv[]) {
                  • It then reads the response from the child along the corresponding child→parent pipe.
                  If the response is -1, it repeats the same again. If not, it continues.
                  */
+                memset(buf, 0, sizeof(buf));    // clear buf container
                 P_from_C_read(fds, request_id, buf, sizeof(buf));
                 sleep_gap();
                 if (atoi(buf) != -1) {
@@ -416,12 +423,23 @@ int main(int argc, const char * argv[]) {
             for (int i = beginning_index; i < 6; i++) {
                 p2c_send_signal(fds, i, PIVOT);
                 sleep_gap();
+                memset(buf, 0, sizeof(buf));    // clear buf container
+                P_from_C_read(fds, i, buf, sizeof(buf));
+//                printf("Child %d receives pivot ,%s",i  , buf);
 
             }
-            sleep(1);
+            
+            int m = 0;
+            int num[5] = {0};
+            
             for (int i = beginning_index; i < 6; i++) {
                 p2c_send_signal(fds, i, pivot_p);
-                sleep_gap();
+                sleep(TIME);
+                memset(buf, 0, sizeof(buf));    // clear buf container
+                P_from_C_read(fds, i, buf, sizeof(buf));
+                printf("Child %d receives pivot and replies %s\n",i  , buf);
+                num[i - 1] = atoi(buf);
+                m += atoi(buf);
 
             }
             
@@ -431,22 +449,7 @@ int main(int argc, const char * argv[]) {
              larger than the pivot in that child.
              It sums up the total from all its children, call it m.
              */
-            int m = 0;
-            int num[5] = {0};
-            
-            for (int i = beginning_index; i < 6 ; i++) {
-                
-                P_from_C_read(fds, i, buf, sizeof(buf));
-                sleep_gap();
 
-                printf("Child %d receives pivot and replies %s\n",i  , buf);
-
-                num[i - 1] = atoi(buf);
-                m += atoi(buf);
-            }
-            
-            
-    
             
             printf("Parent: m = ");
             for (int i = 0; i < n - 1; i++) {
@@ -463,21 +466,23 @@ int main(int argc, const char * argv[]) {
 
             if (k == m) {
                 printf("12 = 25/2 Median found! Pivot is %d !!\n",pivot_p );
+                printf("Parent sends kill signals to all children\n");
                 
                 for (int i = beginning_index; i < 6; i++) {
                     p2c_send_signal(fds, i, BREAK);
-                    sleep_gap();
-
+                    sleep(TIME);
+                    memset(buf, 0, sizeof(buf));    // clear buf container
+                    while (true) {
+                        P_from_C_read(fds, i, buf, sizeof(buf));
+                        if (atoi(buf) == TERMINATE) {
+                            printf("Child %d terminates\n",i);
+                            break;
+                        }
+                        sleep(TIME);
+                    }
+                   
                 }
-                printf("Parent sends kill signals to all children");
-                for (int i = beginning_index; i < 6; i++) {
-                    P_from_C_read(fds, i, buf, sizeof(buf));
-                    sleep_gap();
-
-                    if (atoi(buf) == TERMINATE) {
-                        printf("Child %d terminates\n",i);
-                    };
-                }
+                
                 break;
             }else if( k < m ){
                 printf("\nMedian not found!  Send SMALL to children\n" );
@@ -490,15 +495,10 @@ int main(int argc, const char * argv[]) {
                 for (int i = beginning_index; i < 6; i++) {
                     p2c_send_signal(fds, i, SMALL);
                     sleep_gap();
-
-                }
-                for (int i = beginning_index; i < 6; i++) {
+                    memset(buf, 0, sizeof(buf));    // clear buf container
                     P_from_C_read(fds, i, buf, sizeof(buf));
-                    sleep_gap();
-
                     printf("SMALL after: array size %s\n" , buf);
                 }
-
                 
 
             }else if(k > m) {
@@ -513,14 +513,11 @@ int main(int argc, const char * argv[]) {
                 for (int i = beginning_index; i< 6; i++) {
                     p2c_send_signal(fds, i, LARGE);
                     sleep_gap();
-
-                }
-                for (int i = beginning_index; i < 6; i++) {
+                    memset(buf, 0, sizeof(buf));    // clear buf container
                     P_from_C_read(fds, i, buf, sizeof(buf));
-                    sleep_gap();
-
                     printf("Large after: array size %s\n" , buf);
                 }
+                
                 k = k - m ;
 
             }

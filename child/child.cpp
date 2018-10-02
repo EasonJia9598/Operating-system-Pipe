@@ -181,6 +181,7 @@ vector<int> readingArray(){
     /* reading array */
     vector<int> array;
     array = processFile("/Users/WillJia/Documents/Pipe/median/input_" + to_string(ID) +  ".txt");
+//    array = processFile("input_" + to_string(ID) +  ".txt");
     
     // check capacity of array
     for (int i = 0; i < array.size() ; i++) {
@@ -243,6 +244,11 @@ void request_func(vector<int> &array){
 void pivot_func(vector<int> &array){
     char buf[1024];
 
+    char const *pstar = num_2_char(1000);
+    write(STDOUT_FILENO, pstar, sizeof(pstar));
+
+    
+    memset(buf, 0, sizeof(buf));    // clear buf container
     read(STDIN_FILENO, &buf, sizeof(buf));
     pivot_num = atoi(buf);
 
@@ -313,7 +319,7 @@ void large_func(vector<int> &array){
 
 
 int main(int argc, const char * argv[]) {
-    srand(time(NULL));
+    srand((int)time(NULL));
     char buf[2048];
     //Done : change array to vector<int>
     vector<int> array;
