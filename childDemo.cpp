@@ -59,7 +59,7 @@ int pivot_num;
 /************************************************************************
  
  
-                        CHILDREN FUNCTIONS
+ CHILDREN FUNCTIONS
  
  
  *************************************************************************/
@@ -128,18 +128,18 @@ string readContent(string filename){
  
  *************************************************************************/
 
-vector<int> arrayConvert(string content){
+void arrayConvert(string content , int array[]){
     
-    vector<int> array;
     vector<string> numbers ;
     split(content, ' ', numbers);
     int i = 0;
+    int t = 0;
     for(string n : numbers){
         stringstream geek(n);
-        geek >> i;
-        array.push_back(i);
+        geek >> t;
+        array[i] = t;
+        i++;
     }
-    return array;
 }
 //https://www.geeksforgeeks.org/converting-strings-numbers-cc/
 
@@ -151,8 +151,8 @@ vector<int> arrayConvert(string content){
  
  *************************************************************************/
 
-vector<int> processFile(string filename){
-   return arrayConvert(readContent(filename));
+void processFile(string filename , int array[]){
+   arrayConvert(readContent(filename) , array);
 }
 
 
@@ -174,41 +174,39 @@ void getID(const char * argv[]){
  Description:     whole procedure of reading array
  
  *************************************************************************/
-vector<int> readingArray(){
+void readingArray(int array[]){
     
     int n = 0;
-//    ID = 1;
+    //    ID = 1;
     /* reading array */
-    vector<int> array;
-    array = processFile("/Users/WillJia/Documents/Pipe/median/input_" + to_string(ID) +  ".txt");
+    processFile("/Users/WillJia/Documents/Pipe/median/input_" + to_string(ID) +  ".txt" , array);
     
     // check capacity of array
-    for (int i = 0; i < array.size() ; i++) {
+    for (int i = 0; i < 5 ; i++) {
         if (array[i] != 0) {
             n++;
-//            cout << array[i];
+            //            cout << array[i];
         }
     }
     
     if (n == 5) {
-//        cout << READY;
+        //        cout << READY;
         
         char const *pchar = num_2_char(READY);
         write(STDOUT_FILENO, pchar, sizeof(pchar));
         
-//        write(STDOUT_FILENO, &ready, sizeof(ready));
-
+        //        write(STDOUT_FILENO, &ready, sizeof(ready));
+        
         
     }else{
-//        cout << 2000;
-
+        //        cout << 2000;
+        
         char const *pchar = num_2_char(BREAK);
         write(STDOUT_FILENO, pchar, sizeof(pchar));
         
-//        write(STDOUT_FILENO, &error, sizeof(error));
+        //        write(STDOUT_FILENO, &error, sizeof(error));
     }
     
-    return array;
 }
 
 /************************************************************************
@@ -219,15 +217,21 @@ vector<int> readingArray(){
  
  *************************************************************************/
 
-void request_func(vector<int> &array){
-
+void request_func(int array[]){
     
-    if (array.empty()) {
+    int number = 0;
+    for (int i = 0 ; i < 5; i++) {
+        if (array[i] != 0) {
+            number++;
+        }
+    }
+    
+    if (number == 0) {
         int n = -1;
         char const *pchar = num_2_char(n);
         write(STDOUT_FILENO, pchar, sizeof(pchar));
     }else{
-        char const *pchar = num_2_char(array[(rand() % array.size())]);
+        char const *pchar = num_2_char(array[(rand()%number)]);
         write(STDOUT_FILENO, pchar, sizeof(pchar));
     }
 }
@@ -240,24 +244,24 @@ void request_func(vector<int> &array){
  
  *************************************************************************/
 
-void pivot_func(vector<int> &array){
+void pivot_func(int array[]){
     char buf[1024];
-
+    
     read(STDIN_FILENO, &buf, sizeof(buf));
     pivot_num = atoi(buf);
-
+    
     int index = 0;
-
-    for (int n : array) {
-        if (n > pivot_num) {
+    
+    for (int i = 0 ; i < 5 ; i++) {
+        if (array[i] > pivot_num) {
             index++;
         }
     }
     char const *pchar = num_2_char(index);
     write(STDOUT_FILENO, pchar, sizeof(pchar));
     
-  
-   
+    
+    
 }
 
 /************************************************************************
@@ -267,18 +271,25 @@ void pivot_func(vector<int> &array){
  Description:     delete Large number than pivot
  
  *************************************************************************/
-void small_func(vector<int> &array){
+void small_func(int array[]){
     
-    for (int i = 0; i < (int)array.size(); i++) {
+    for (int i = 0; i < 5; i++) {
         if (array[i] < pivot_num) {
-            array.erase(array.begin()+i);
-            i--;
+            array[i] = 0;
         }
     }
-    int size = (int)array.size();
+    
+    int number = 0;
+    for (int i = 0 ; i < 5; i++) {
+        if (array[i] != 0) {
+            number++;
+        }
+    }
+    
+    int size = number;
     char const *pchar = num_2_char(size);
     write(STDOUT_FILENO, pchar, sizeof(pchar));
-
+    
 }
 
 /************************************************************************
@@ -288,26 +299,24 @@ void small_func(vector<int> &array){
  Description:     delete Large number than pivot
  
  *************************************************************************/
-void large_func(vector<int> &array){
+void large_func(int array[]){
     
-    for (int i = 0; i < (int)array.size(); i++) {
+    for (int i = 0; i < 5; i++) {
         if (array[i] > pivot_num) {
-            array.erase(array.begin()+i);
-            i--;
+            array[i] = 0;
         }
     }
     
-    int size;
-
-    if (array.empty()) {
-        size = 0;
-    }else{
-        size = array.size();
+    int number = 0;
+    for (int i = 0 ; i < 5; i++) {
+        if (array[i] != 0) {
+            number++;
+        }
     }
-
-    char const *pchar = num_2_char(size);
+    
+    char const *pchar = num_2_char(number);
     write(STDOUT_FILENO, pchar, sizeof(pchar));
-
+    
 }
 
 
@@ -316,57 +325,56 @@ int main(int argc, const char * argv[]) {
     srand(time(NULL));
     char buf[2048];
     //Done : change array to vector<int>
-    vector<int> array;
+    int array[5];
     getID(argv);
-    array = readingArray();
-        
+     readingArray(array);
+    
     //TODO:
     /* It then enters a while loop (broken by a user defined signal -
      * which is sent by the parent to terminate the child process).
      */
     while (true) {
         
-    /*
-     * • In each iteration it waits on the parent→child pipe to respond according the codes
-     *   it gets.
-     */
+        /*
+         * • In each iteration it waits on the parent→child pipe to respond according the codes
+         *   it gets.
+         */
         
-        memset(buf, 0, sizeof(buf));    // clear buf container
         // read signal from parent
         read(STDIN_FILENO, &buf, sizeof(buf));
         int signal = atoi(buf);
         
-
+        
         switch (signal) {
                 
-    /* • If it receives the command REQUEST from parent:
-     *   ■ If its array is empty, write -1 on the child->parent pipe
-     *   ■ Else chose a random element from its array and write it to the child→parent pipe
-     */
+                /* • If it receives the command REQUEST from parent:
+                 *   ■ If its array is empty, write -1 on the child->parent pipe
+                 *   ■ Else chose a random element from its array and write it to the child→parent pipe
+                 */
             case REQUEST:
                 request_func(array);
                 break;
                 
-    /* • If it receives the command PIVOT from parent:
-     *   ■ It waits to read another integer (and store it as pivot).
-     *   ■ It then writes the number of integers greater than pivot on the child→parent pipe.
-     *     If it has an empty array, the number would be 0.
-     */
+                /* • If it receives the command PIVOT from parent:
+                 *   ■ It waits to read another integer (and store it as pivot).
+                 *   ■ It then writes the number of integers greater than pivot on the child→parent pipe.
+                 *     If it has an empty array, the number would be 0.
+                 */
             case PIVOT:
                 pivot_func(array);
                 break;
                 
-    /* • If it receives the command SMALL from parent:
-     *   ■ It deletes the elements smaller than the pivot and updates the array.
-     */
+                /* • If it receives the command SMALL from parent:
+                 *   ■ It deletes the elements smaller than the pivot and updates the array.
+                 */
             case SMALL:
                 small_func(array);
                 break;
                 
-    /* • If it receives the command LARGE from parent:
-     *   ■ It deletes the elements larger than the pivot and updates the array
-     */
-
+                /* • If it receives the command LARGE from parent:
+                 *   ■ It deletes the elements larger than the pivot and updates the array
+                 */
+                
             case LARGE:
                 large_func(array);
                 break;
@@ -379,5 +387,5 @@ int main(int argc, const char * argv[]) {
         
         
     }
-
+    
 }

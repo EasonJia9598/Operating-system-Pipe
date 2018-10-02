@@ -77,6 +77,18 @@ int n = 5;
 
 /************************************************************************
  
+ Function:        sleep_gap
+ 
+ Description:     sleep 10 ms
+ 
+ *************************************************************************/
+
+void sleep_gap(){
+    sleep(0.6);
+}
+
+/************************************************************************
+ 
  Function:        P2C_write
  
  Description:     parent write to child
@@ -370,12 +382,14 @@ int main(int argc, const char * argv[]) {
                 request_id = rand() % 5 + 1;
                 
                 p2c_send_signal(fds, request_id, REQUEST);
-                
+                sleep_gap();
+
                 /*
                  • It then reads the response from the child along the corresponding child→parent pipe.
                  If the response is -1, it repeats the same again. If not, it continues.
                  */
                 P_from_C_read(fds, request_id, buf, sizeof(buf));
+                sleep_gap();
                 if (atoi(buf) != -1) {
                     break;
                 }
@@ -401,10 +415,14 @@ int main(int argc, const char * argv[]) {
             
             for (int i = beginning_index; i < 6; i++) {
                 p2c_send_signal(fds, i, PIVOT);
+                sleep_gap();
+
             }
-            
+            sleep(1);
             for (int i = beginning_index; i < 6; i++) {
                 p2c_send_signal(fds, i, pivot_p);
+                sleep_gap();
+
             }
             
             
@@ -419,6 +437,8 @@ int main(int argc, const char * argv[]) {
             for (int i = beginning_index; i < 6 ; i++) {
                 
                 P_from_C_read(fds, i, buf, sizeof(buf));
+                sleep_gap();
+
                 printf("Child %d receives pivot and replies %s\n",i  , buf);
 
                 num[i - 1] = atoi(buf);
@@ -446,10 +466,14 @@ int main(int argc, const char * argv[]) {
                 
                 for (int i = beginning_index; i < 6; i++) {
                     p2c_send_signal(fds, i, BREAK);
+                    sleep_gap();
+
                 }
                 printf("Parent sends kill signals to all children");
                 for (int i = beginning_index; i < 6; i++) {
                     P_from_C_read(fds, i, buf, sizeof(buf));
+                    sleep_gap();
+
                     if (atoi(buf) == TERMINATE) {
                         printf("Child %d terminates\n",i);
                     };
@@ -465,9 +489,13 @@ int main(int argc, const char * argv[]) {
                  */
                 for (int i = beginning_index; i < 6; i++) {
                     p2c_send_signal(fds, i, SMALL);
+                    sleep_gap();
+
                 }
                 for (int i = beginning_index; i < 6; i++) {
                     P_from_C_read(fds, i, buf, sizeof(buf));
+                    sleep_gap();
+
                     printf("SMALL after: array size %s\n" , buf);
                 }
 
@@ -484,9 +512,13 @@ int main(int argc, const char * argv[]) {
                 
                 for (int i = beginning_index; i< 6; i++) {
                     p2c_send_signal(fds, i, LARGE);
+                    sleep_gap();
+
                 }
                 for (int i = beginning_index; i < 6; i++) {
                     P_from_C_read(fds, i, buf, sizeof(buf));
+                    sleep_gap();
+
                     printf("Large after: array size %s\n" , buf);
                 }
                 k = k - m ;

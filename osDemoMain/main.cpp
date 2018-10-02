@@ -317,7 +317,7 @@ int main(int argc, const char * argv[]) {
         
         pipeToSTD_IN_OUT(fds);
         
-        string filename = "/root/AS1/child";
+        string filename = "../childDemo";
         
         childExecProgram(filename.c_str());
         
