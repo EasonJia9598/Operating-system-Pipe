@@ -51,7 +51,7 @@ using namespace std;
 #define beginning_index 1
 
 //sleep time
-#define TIME 1
+#define TIME 0
 
 
 
@@ -86,7 +86,7 @@ int n = 5;
  *************************************************************************/
 
 void sleep_gap(){
-    sleep(1);
+    sleep(0);
 }
 
 /************************************************************************
@@ -160,7 +160,21 @@ void assignID(int fds[10][2]){
     }
 }
 
+/************************************************************************
+ 
+ Function:        p2c_send_signal
+ 
+ Description:     parent send signal to  all child
+ 
+ *************************************************************************/
 
+void p2c_send_signal(int fds[10][2] , int index , int signal ){
+    
+    std::string s = std::to_string(signal);
+    char const *pchar = s.c_str();
+    P2C_write(fds, index, pchar, sizeof(pchar));
+    
+}
 
 /************************************************************************
  
@@ -178,11 +192,22 @@ void waitForReady(int fds[10][2]){
     /* keep listening until all child process return message. */
     while (true) {
         for (int i = beginning_index ; i < 6 ; i++) {
+            printf("**\n");
             memset(buf, 0, sizeof(buf));    // clear buf container
             P_from_C_read(fds, i, &buf, sizeof(buf));
-            printf("Array %d contains %s\n" , i , buf);
-//            sleep(2);
+            printf("Array %d contains %s" , i , buf);
+            int x = 1280;
+            p2c_send_signal(fds, i, x);
+            
+            
             memset(buf, 0, sizeof(buf));    // clear buf container
+            P_from_C_read(fds, i, &buf, sizeof(buf));
+            printf("%s\n", buf);
+            
+            p2c_send_signal(fds, i, x);
+            
+            
+            memset(buf, 0, sizeof(buf));    // clear buffer container
             P_from_C_read(fds, i, &buf, sizeof(buf));
             
             C2P_singal = atoi(buf);         // change char[] buf to int
@@ -197,6 +222,7 @@ void waitForReady(int fds[10][2]){
                 cout << "\n*************Program failed***************\n\n" << endl;
                 exit(0);                    // exit
             }
+
         }
         
         for (int i = 0; i < 5 ; i++) {
@@ -206,6 +232,7 @@ void waitForReady(int fds[10][2]){
         }
         
         if (flag == 0) {
+            printf("************************************\n");
             printf("Parent READY\n");
             break;
         }else{
@@ -214,21 +241,7 @@ void waitForReady(int fds[10][2]){
     }
 }
 
-/************************************************************************
- 
- Function:        p2c_send_signal
- 
- Description:     parent send signal to  all child
- 
- *************************************************************************/
 
-void p2c_send_signal(int fds[10][2] , int index , int signal ){
-    
-    std::string s = std::to_string(signal);
-    char const *pchar = s.c_str();
-    P2C_write(fds, index, pchar, sizeof(pchar));
-    
-}
 
 /************************************************************************
  
@@ -323,9 +336,14 @@ int main(int argc, const char * argv[]) {
     pid_t pid;
     
     // fork 5 children processes
+    printf("Starting fork children process.\n");
+    
     for (int i = 0 ; i < 5; i++) {
         pid = fork();
-        sleep(TIME);
+        if (pid != 0 && pid != -1) {
+            printf("NO. %d Child has been forked by parent\n" , i + 1);
+        }
+        sleep(1);
         if(pid == 0 || pid == -1){
             break;
             //Ref : https://blog.csdn.net/cupidove/article/details/9297335

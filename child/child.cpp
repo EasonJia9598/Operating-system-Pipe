@@ -175,22 +175,32 @@ void getID(const char * argv[]){
  
  *************************************************************************/
 vector<int> readingArray(){
-    
+    char buf[1024];
     int n = 0;
 //    ID = 1;
     /* reading array */
     vector<int> array;
     string info ;
+    string info2 ="/";
+    
     array = processFile("/Users/WillJia/Documents/Pipe/median/input_" + to_string(ID) +  ".txt");
+    
 //    array = processFile("input_" + to_string(ID) +  ".txt");
     
     // check capacity of array
+    // TODO: why one buf can't send all info
+    
     for (int i = 0; i < array.size() ; i++) {
         if (array[i] != 0) {
             n++;
-            info.append(to_string(array[i]));
-            info.append("   ");
-//            cout << array[i];
+            if (i < 3) {
+                info.append(to_string(array[i]));
+                info.append("/");
+            }else{
+                info2.append(to_string(array[i]));
+                info2.append("/");
+            }
+           
         }
     }
     
@@ -199,7 +209,15 @@ vector<int> readingArray(){
         char const *pstar = info.c_str();
         write(STDOUT_FILENO, pstar, sizeof(pstar));
         
-//        sleep(1);
+        memset(buf, 0, sizeof(buf));    // clear buffer container
+        read(STDIN_FILENO, &buf, sizeof(buf));
+        
+        char const *pstar2 = info2.c_str();
+        write(STDOUT_FILENO, pstar2, sizeof(pstar2));
+        
+        memset(buf, 0, sizeof(buf));    // clear buffer container
+        read(STDIN_FILENO, &buf, sizeof(buf));
+        
         char const *pchar = num_2_char(READY);
         write(STDOUT_FILENO, pchar, sizeof(pchar));
         
