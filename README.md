@@ -48,3 +48,8 @@ Full system report : [123.pdf](https://github.com/EasonJia9598/Pipe/files/243995
 <img width="1920" alt="screen shot 2018-10-02 at 7 45 15 pm" src="https://user-images.githubusercontent.com/38600346/46381276-f2b49c80-c67b-11e8-8534-b56b23dfa4b8.png">
 
 
+
+
+
+# potential bug reason
+read pipe close by write function but do not reopen
