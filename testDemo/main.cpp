@@ -20,7 +20,6 @@
 
 #include <iostream>
 #include <algorithm>    // std::sort
-
 #include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +32,6 @@
 #include <sstream>
 #include <cstdlib>
 #include <ctime>
-//#include <time.h>       /* time */
 
 using namespace std;
 
@@ -390,7 +388,7 @@ void childExecProgram(const char* filename){
 int main(int argc, const char * argv[]) {
     
     // Generate 25 random numbers into 5 input_file
-    generateInputFiles();
+//    generateInputFiles();
     
     printf("Process communication program begin.\n");
     
