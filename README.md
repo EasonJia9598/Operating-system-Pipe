@@ -452,7 +452,7 @@ pchar will be the argument to argv[] at```int main(int argc, const char * argv[]
 And because of argv[], we can send ID to the new process.
 ***
 
-##***And at this point,inter process communication lines between parent process and ET process (external process) is established.***
+## ***And at this point,inter process communication lines between parent process and ET process (external process) is established.***
 
 <div STYLE="page-break-after: always;"></div>
 
