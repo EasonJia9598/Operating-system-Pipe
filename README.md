@@ -371,7 +371,7 @@ void childGetID(int fds[10][2]){
 ```
 
 ***
-##Next Step is the most important function in all programs.
+## Next Step is the most important function in all programs.
 ### <font color=#DC143C>-- Redirect pipe lines to  STDIN_FILENO and  STDOUT_FILENO</font>
 
 As we know, once we use exec family functions invoke external program. It will execture a complied file, terminate the previously child process and become a new process.
